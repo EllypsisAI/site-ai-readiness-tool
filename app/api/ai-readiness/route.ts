@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import FirecrawlApp from '@mendable/firecrawl-js';
+import { createServiceClient } from '@/lib/supabase/server';
 
 const firecrawl = new FirecrawlApp({
   apiKey: process.env.FIRECRAWL_API_KEY!
@@ -579,10 +580,43 @@ export async function POST(request: NextRequest) {
     console.log(`[AI-READY] Step 4/4: Score calculation completed in ${Date.now() - scoreStartTime}ms`);
     console.log(`[AI-READY] Final scoring for ${domain}: base=${baseScore}, bonus=${reputationBonus}, final=${overallScore}`);
     console.log(`[AI-READY] Total analysis time: ${Date.now() - scrapeStartTime}ms`);
-    
+
+    // Save to Supabase
+    let analysisId: string | null = null;
+    try {
+      const supabase = createServiceClient();
+      const { data: insertedAnalysis, error: insertError } = await supabase
+        .from('analyses')
+        .insert({
+          url,
+          domain,
+          overall_score: overallScore,
+          checks: allChecks,
+          html_content: html.substring(0, 50000), // Store more HTML in DB
+          metadata: {
+            title: metadata.title,
+            description: metadata.description,
+            analyzedAt: new Date().toISOString()
+          }
+        })
+        .select('id')
+        .single();
+
+      if (insertError) {
+        console.error('[AI-READY] Supabase insert error:', insertError);
+      } else {
+        analysisId = insertedAnalysis.id;
+        console.log(`[AI-READY] Analysis saved with ID: ${analysisId}`);
+      }
+    } catch (dbError) {
+      console.error('[AI-READY] Database error:', dbError);
+      // Continue without DB - don't fail the request
+    }
+
     return NextResponse.json({
       success: true,
       url,
+      analysisId,
       overallScore,
       checks: allChecks,
       htmlContent: html.substring(0, 10000), // Limit HTML for client transfer

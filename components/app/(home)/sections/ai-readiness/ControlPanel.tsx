@@ -32,6 +32,12 @@ interface ControlPanelProps {
   url: string;
   analysisData?: any;
   onReset: () => void;
+  onAIAnalysisComplete?: (aiData: {
+    aiInsights: any[];
+    overallAIReadiness: string;
+    topPriorities: string[];
+    enhancedScore: number;
+  }) => void;
 }
 
 interface CheckItem {
@@ -53,6 +59,7 @@ export default function ControlPanel({
   url,
   analysisData,
   onReset,
+  onAIAnalysisComplete,
 }: ControlPanelProps) {
   const [showAIAnalysis, setShowAIAnalysis] = useState(false);
   const [aiInsights, setAiInsights] = useState<CheckItem[]>([]);
@@ -789,10 +796,11 @@ export default function ControlPanel({
                   body: JSON.stringify({
                     url,
                     htmlContent: analysisData?.htmlContent || '',
-                    currentChecks: checks
+                    currentChecks: checks,
+                    analysisId: analysisData?.analysisId // Pass analysisId to save to DB
                   })
                 });
-                
+
                 const data = await response.json();
                 if (data.success && data.insights) {
                   // Convert AI insights to CheckItem format with AI flag
@@ -802,9 +810,9 @@ export default function ControlPanel({
                     description: insight.details?.substring(0, 60) + '...' || 'AI Analysis',
                     isAI: true, // Mark as AI-generated
                   }));
-                  
+
                   setAiInsights(aiChecks);
-                  
+
                   // Replace loading tiles with real AI tiles
                   setCombinedChecks(prev => {
                     // Remove loading tiles
@@ -812,14 +820,23 @@ export default function ControlPanel({
                     // Add real AI tiles
                     return [...withoutLoading, ...aiChecks];
                   });
-                  
+
                   // Calculate enhanced score
+                  let calculatedEnhancedScore = overallScore;
                   if (data.insights.length > 0) {
                     const aiScores = data.insights.map((i: any) => i.score || 0);
                     const avgAiScore = aiScores.reduce((a: number, b: number) => a + b, 0) / aiScores.length;
-                    const combinedScore = Math.round((overallScore * 0.6) + (avgAiScore * 0.4));
-                    setEnhancedScore(combinedScore);
+                    calculatedEnhancedScore = data.enhancedScore || Math.round((overallScore * 0.6) + (avgAiScore * 0.4));
+                    setEnhancedScore(calculatedEnhancedScore);
                   }
+
+                  // Notify parent component with AI analysis results
+                  onAIAnalysisComplete?.({
+                    aiInsights: data.insights,
+                    overallAIReadiness: data.overallAIReadiness || '',
+                    topPriorities: data.topPriorities || [],
+                    enhancedScore: calculatedEnhancedScore,
+                  });
                 }
               } catch (error) {
                 console.error('AI analysis error:', error);

@@ -23,6 +23,7 @@ import HeroScraping from "@/components/app/(home)/sections/hero-scraping/HeroScr
 import { Endpoint } from "@/components/shared/Playground/Context/types";
 import InlineResults from "@/components/app/(home)/sections/ai-readiness/InlineResults";
 import ControlPanel from "@/components/app/(home)/sections/ai-readiness/ControlPanel";
+import ScrollyJourney from "@/components/app/(home)/sections/scrolly/ScrollyJourney";
 
 // Import header components
 import HeaderBrandKit from "@/components/shared/header/BrandKit/BrandKit";
@@ -209,6 +210,16 @@ export default function StyleGuidePage() {
                       setAnalysisData(null);
                       setUrl("");
                     }}
+                    onAIAnalysisComplete={(aiData) => {
+                      // Update analysisData with AI insights
+                      setAnalysisData((prev: any) => ({
+                        ...prev,
+                        aiInsights: aiData.aiInsights,
+                        overallAIReadiness: aiData.overallAIReadiness,
+                        topPriorities: aiData.topPriorities,
+                        enhancedScore: aiData.enhancedScore,
+                      }));
+                    }}
                   />
                 </motion.div>
               )}
@@ -296,6 +307,29 @@ export default function StyleGuidePage() {
             </motion.div>
           )}
         </section>
+
+        {/* Scrolly Journey - Show after results */}
+        {showResults && analysisData && (
+          <ScrollyJourney
+            analysisData={{
+              id: analysisData.analysisId,
+              url: analysisData.url,
+              overallScore: analysisData.enhancedScore || analysisData.overallScore,
+              checks: analysisData.checks,
+              metadata: analysisData.metadata,
+              // AI insights data for enhanced journey
+              aiInsights: analysisData.aiInsights,
+              overallAIReadiness: analysisData.overallAIReadiness,
+              topPriorities: analysisData.topPriorities,
+            }}
+            onEmailCapture={(email) => {
+              console.log('Email captured:', email);
+            }}
+            onCheckout={() => {
+              console.log('Checkout initiated');
+            }}
+          />
+        )}
       </div>
     </HeaderProvider>
   );

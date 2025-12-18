@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { createServiceClient } from '@/lib/supabase/server';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
@@ -9,6 +10,7 @@ interface AIAnalysisRequest {
   url: string;
   htmlContent: string;
   currentChecks: any[];
+  analysisId?: string; // ID from the analyses table to update
 }
 
 async function generateAIInsights(url: string, htmlContent: string, currentChecks: any[]) {
@@ -213,21 +215,59 @@ function generateMockInsights(url: string = 'https://example.com') {
 
 export async function POST(request: NextRequest) {
   try {
-    const { url, htmlContent, currentChecks } = await request.json();
-    
+    const { url, htmlContent, currentChecks, analysisId } = await request.json();
+
     if (!url || !htmlContent) {
       return NextResponse.json({ error: 'URL and HTML content are required' }, { status: 400 });
     }
-    
+
     const insights = await generateAIInsights(url, htmlContent, currentChecks || []);
-    
+
+    const aiInsights = insights.insights || [];
+    const overallAIReadiness = insights.overallAIReadiness || '';
+    const topPriorities = insights.topPriorities || [];
+
+    // Calculate enhanced score (weighted average of basic + AI scores)
+    let enhancedScore: number | null = null;
+    if (aiInsights.length > 0 && currentChecks?.length > 0) {
+      const basicAvg = currentChecks.reduce((sum: number, c: any) => sum + (c.score || 0), 0) / currentChecks.length;
+      const aiAvg = aiInsights.reduce((sum: number, c: any) => sum + (c.score || 0), 0) / aiInsights.length;
+      enhancedScore = Math.round((basicAvg * 0.6) + (aiAvg * 0.4));
+    }
+
+    // Save AI insights to database if analysisId provided
+    if (analysisId) {
+      try {
+        const supabase = createServiceClient();
+        const { error: updateError } = await supabase
+          .from('analyses')
+          .update({
+            ai_insights: aiInsights,
+            ai_overall_readiness: overallAIReadiness,
+            ai_top_priorities: topPriorities,
+            enhanced_score: enhancedScore,
+          })
+          .eq('id', analysisId);
+
+        if (updateError) {
+          console.error('[AI-ANALYSIS] Failed to save to DB:', updateError);
+        } else {
+          console.log(`[AI-ANALYSIS] Saved AI insights to analysis ${analysisId}`);
+        }
+      } catch (dbError) {
+        console.error('[AI-ANALYSIS] Database error:', dbError);
+        // Continue without failing - we still return the insights
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      insights: insights.insights || [],
-      overallAIReadiness: insights.overallAIReadiness || '',
-      topPriorities: insights.topPriorities || []
+      insights: aiInsights,
+      overallAIReadiness,
+      topPriorities,
+      enhancedScore,
     });
-    
+
   } catch (error) {
     console.error('AI Analysis error:', error);
     // Return mock data on error, using the url from request if available
