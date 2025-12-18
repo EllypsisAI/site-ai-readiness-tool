@@ -108,10 +108,41 @@ export default function PricingCTA({
     }
   };
 
-  const handleCheckout = () => {
-    onCheckout?.();
-    // For now, just show a message - Stripe integration in Phase 4
-    alert("Checkout will be available soon! Email saved for early access.");
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+
+  const handleCheckout = async () => {
+    if (!analysisId || !email) {
+      setError("Please enter your email first");
+      return;
+    }
+
+    setIsCheckingOut(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          analysisId,
+          email,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.checkoutUrl) {
+        onCheckout?.();
+        // Redirect to Stripe Checkout
+        window.location.href = data.checkoutUrl;
+      } else {
+        setError(data.error || "Failed to start checkout");
+        setIsCheckingOut(false);
+      }
+    } catch (err) {
+      setError("Something went wrong. Please try again.");
+      setIsCheckingOut(false);
+    }
   };
 
   return (
@@ -288,10 +319,20 @@ export default function PricingCTA({
               {/* Checkout button */}
               <button
                 onClick={handleCheckout}
-                className="w-full flex items-center justify-center gap-8 px-24 py-14 bg-accent-black hover:bg-black-alpha-80 text-white rounded-8 text-label-large font-medium transition-all"
+                disabled={isCheckingOut}
+                className="w-full flex items-center justify-center gap-8 px-24 py-14 bg-accent-black hover:bg-black-alpha-80 text-white rounded-8 text-label-large font-medium transition-all disabled:opacity-50"
               >
-                Get Full Report
-                <ArrowRight className="w-18 h-18" />
+                {isCheckingOut ? (
+                  <>
+                    <Loader2 className="w-18 h-18 animate-spin" />
+                    Redirecting to payment...
+                  </>
+                ) : (
+                  <>
+                    Get Full Report
+                    <ArrowRight className="w-18 h-18" />
+                  </>
+                )}
               </button>
             </div>
           )}
