@@ -1,18 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Check, Loader2, Mail, FileText, ArrowRight, AlertCircle } from "lucide-react";
+import { Check, Loader2, Mail, FileText, ArrowRight, AlertCircle, Download } from "lucide-react";
 
 type PaymentStatus = "loading" | "success" | "processing" | "error";
+type PdfStatus = "pending" | "generating" | "completed" | "failed" | "not_found";
 
 interface PurchaseDetails {
   email: string;
   domain: string;
   analysisId: string;
-  pdfStatus: string;
+  pdfStatus: PdfStatus;
+  pdfUrl?: string;
 }
 
 export default function SuccessPage() {
@@ -22,6 +24,33 @@ export default function SuccessPage() {
   const [status, setStatus] = useState<PaymentStatus>("loading");
   const [details, setDetails] = useState<PurchaseDetails | null>(null);
   const [error, setError] = useState("");
+
+  // Poll for PDF status
+  const pollPdfStatus = useCallback(async () => {
+    if (!sessionId) return;
+
+    try {
+      const response = await fetch(`/api/pdf/status?session_id=${sessionId}`);
+      const data = await response.json();
+
+      if (data.status === "completed" || data.status === "failed") {
+        setDetails((prev) =>
+          prev
+            ? {
+                ...prev,
+                pdfStatus: data.status,
+                pdfUrl: data.pdfUrl,
+              }
+            : null
+        );
+        return true; // Stop polling
+      }
+      return false; // Continue polling
+    } catch (err) {
+      console.error("PDF status poll error:", err);
+      return false;
+    }
+  }, [sessionId]);
 
   useEffect(() => {
     if (!sessionId) {
@@ -42,8 +71,22 @@ export default function SuccessPage() {
             domain: data.domain,
             analysisId: data.analysisId,
             pdfStatus: data.pdfStatus || "pending",
+            pdfUrl: data.pdfUrl,
           });
           setStatus("success");
+
+          // Start polling if PDF is not ready
+          if (data.pdfStatus !== "completed" && data.pdfStatus !== "failed") {
+            const pollInterval = setInterval(async () => {
+              const shouldStop = await pollPdfStatus();
+              if (shouldStop) {
+                clearInterval(pollInterval);
+              }
+            }, 3000); // Poll every 3 seconds
+
+            // Cleanup on unmount
+            return () => clearInterval(pollInterval);
+          }
         } else if (data.status === "processing") {
           setStatus("processing");
         } else {
@@ -57,7 +100,7 @@ export default function SuccessPage() {
     };
 
     verifySession();
-  }, [sessionId]);
+  }, [sessionId, pollPdfStatus]);
 
   return (
     <div className="min-h-screen bg-background-base flex items-center justify-center px-16">
@@ -121,24 +164,44 @@ export default function SuccessPage() {
                 </div>
 
                 <div className="flex items-start gap-12">
-                  <div className="flex-shrink-0 w-24 h-24 bg-accent-black rounded-full flex items-center justify-center">
+                  <div className={`flex-shrink-0 w-24 h-24 rounded-full flex items-center justify-center ${
+                    details.pdfStatus === "completed" ? "bg-accent-black" :
+                    details.pdfStatus === "failed" ? "bg-heat-200" : "bg-accent-black"
+                  }`}>
                     {details.pdfStatus === "completed" ? (
                       <Check className="w-14 h-14 text-white" />
+                    ) : details.pdfStatus === "failed" ? (
+                      <AlertCircle className="w-14 h-14 text-white" />
                     ) : (
                       <Loader2 className="w-14 h-14 text-white animate-spin" />
                     )}
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <div className="text-label-medium text-accent-black">
                       {details.pdfStatus === "completed"
                         ? "Report ready"
+                        : details.pdfStatus === "failed"
+                        ? "Generation failed"
                         : "Generating your report"}
                     </div>
                     <div className="text-body-small text-black-alpha-48">
                       {details.pdfStatus === "completed"
-                        ? "Your PDF report is ready"
+                        ? "Your PDF report is ready to download"
+                        : details.pdfStatus === "failed"
+                        ? "We'll send it via email shortly"
                         : "This usually takes 1-2 minutes"}
                     </div>
+                    {details.pdfStatus === "completed" && details.pdfUrl && (
+                      <a
+                        href={details.pdfUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-6 mt-8 px-12 py-6 bg-accent-black hover:bg-black-alpha-80 text-white rounded-6 text-label-small transition-colors"
+                      >
+                        <Download className="w-14 h-14" />
+                        Download PDF
+                      </a>
+                    )}
                   </div>
                 </div>
 

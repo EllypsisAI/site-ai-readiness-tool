@@ -66,9 +66,11 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Create PDF report record (will be generated in Phase 5)
+      // Create PDF report record and trigger generation
       const analysisId = session.metadata?.analysis_id;
-      if (analysisId) {
+      const customerEmail = session.metadata?.email || session.customer_email;
+
+      if (analysisId && customerEmail) {
         // Find the purchase to link the PDF
         const { data: purchase } = await supabase
           .from('purchases')
@@ -77,13 +79,30 @@ export async function POST(request: NextRequest) {
           .single();
 
         if (purchase) {
+          // Create PDF report record
           await supabase.from('pdf_reports').insert({
             analysis_id: analysisId,
             purchase_id: purchase.id,
-            status: 'pending', // Will be processed by PDF generation job
+            status: 'pending',
           });
 
           console.log(`[STRIPE WEBHOOK] Created PDF report record for analysis: ${analysisId}`);
+
+          // Trigger PDF generation asynchronously
+          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+          fetch(`${baseUrl}/api/pdf/generate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              analysisId,
+              purchaseId: purchase.id,
+              email: customerEmail,
+            }),
+          }).catch((err) => {
+            console.error('[STRIPE WEBHOOK] Failed to trigger PDF generation:', err);
+          });
+
+          console.log(`[STRIPE WEBHOOK] Triggered PDF generation for ${customerEmail}`);
         }
       }
 
