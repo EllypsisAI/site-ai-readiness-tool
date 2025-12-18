@@ -3,6 +3,7 @@ import { GeistMono } from "geist/font/mono";
 import { Roboto_Mono } from "next/font/google";
 import ColorStyles from "@/components/shared/color-styles/color-styles";
 import Scrollbar from "@/components/ui/scrollbar";
+import CookieConsent from "@/components/shared/CookieConsent";
 import "styles/main.css";
 
 const robotoMono = Roboto_Mono({
@@ -34,6 +35,7 @@ export default function RootLayout({
       >
         <main className="overflow-x-clip">{children}</main>
         <Scrollbar />
+        <CookieConsent />
       </body>
     </html>
   );

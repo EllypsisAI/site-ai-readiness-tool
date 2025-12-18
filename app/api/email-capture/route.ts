@@ -4,7 +4,7 @@ import { createServiceClient } from '@/lib/supabase/server';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, analysisId, companyName, marketingConsent, utmParams } = body;
+    const { email, analysisId, companyName, marketingConsent, privacyAccepted, consentTimestamp, utmParams } = body;
 
     if (!email || !email.includes('@')) {
       return NextResponse.json({ error: 'Valid email is required' }, { status: 400 });
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create new lead
+    // Create new lead with consent tracking
     const { data: lead, error: insertError } = await supabase
       .from('leads')
       .insert({
@@ -52,6 +52,8 @@ export async function POST(request: NextRequest) {
         analysis_id: analysisId || null,
         company_name: companyName || null,
         marketing_consent: marketingConsent || false,
+        privacy_accepted: privacyAccepted || false,
+        consent_timestamp: consentTimestamp || new Date().toISOString(),
         utm_source: utmParams?.utm_source || null,
         utm_medium: utmParams?.utm_medium || null,
         utm_campaign: utmParams?.utm_campaign || null,

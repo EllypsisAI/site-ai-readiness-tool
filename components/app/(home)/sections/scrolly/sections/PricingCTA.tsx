@@ -46,6 +46,8 @@ export default function PricingCTA({
   const [emailSubmitted, setEmailSubmitted] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [marketingConsent, setMarketingConsent] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
 
   // Generate shareable link
   const shareableLink = analysisId
@@ -69,19 +71,25 @@ export default function PricingCTA({
       setError("Please enter a valid email");
       return;
     }
+    if (!privacyAccepted) {
+      setError("Please accept the privacy policy to continue");
+      return;
+    }
 
     setIsSubmitting(true);
     setError("");
 
     try {
-      // Call email capture API with UTM params
+      // Call email capture API with UTM params and consent
       const response = await fetch("/api/email-capture", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email,
           analysisId,
-          marketingConsent: true,
+          marketingConsent,
+          privacyAccepted,
+          consentTimestamp: new Date().toISOString(),
           utmParams,
         }),
       });
@@ -183,12 +191,46 @@ export default function PricingCTA({
                   className="w-full pl-48 pr-16 py-14 bg-black-alpha-4 border border-black-alpha-8 rounded-8 text-body-large placeholder:text-black-alpha-32 focus:outline-none focus:border-accent-black transition-colors"
                 />
               </div>
+              {/* Consent checkboxes */}
+              <div className="space-y-10 text-left">
+                <label className="flex items-start gap-10 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={privacyAccepted}
+                    onChange={(e) => setPrivacyAccepted(e.target.checked)}
+                    className="mt-2 w-16 h-16 rounded border-black-alpha-16 text-accent-black focus:ring-accent-black"
+                  />
+                  <span className="text-body-small text-black-alpha-64">
+                    I agree to the{" "}
+                    <a href="/privacy" target="_blank" className="underline hover:text-accent-black">
+                      Privacy Policy
+                    </a>{" "}
+                    and{" "}
+                    <a href="/terms" target="_blank" className="underline hover:text-accent-black">
+                      Terms of Service
+                    </a>
+                    <span className="text-heat-200">*</span>
+                  </span>
+                </label>
+                <label className="flex items-start gap-10 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={marketingConsent}
+                    onChange={(e) => setMarketingConsent(e.target.checked)}
+                    className="mt-2 w-16 h-16 rounded border-black-alpha-16 text-accent-black focus:ring-accent-black"
+                  />
+                  <span className="text-body-small text-black-alpha-64">
+                    Send me tips on improving my AI readiness (optional)
+                  </span>
+                </label>
+              </div>
+
               {error && (
                 <div className="text-body-small text-heat-200">{error}</div>
               )}
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !privacyAccepted}
                 className="w-full flex items-center justify-center gap-8 px-24 py-14 bg-accent-black hover:bg-black-alpha-80 text-white rounded-8 text-label-large font-medium transition-all disabled:opacity-50"
               >
                 {isSubmitting ? (
