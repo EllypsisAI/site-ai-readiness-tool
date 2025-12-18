@@ -2,7 +2,8 @@
 
 import { useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
-import { Check, ArrowRight, Mail, Loader2 } from "lucide-react";
+import { Check, ArrowRight, Mail, Loader2, Copy, Share2 } from "lucide-react";
+import { useUtmParams } from "../hooks/useUtmParams";
 
 interface Personalization {
   ctaMessage: string;
@@ -38,11 +39,29 @@ export default function PricingCTA({
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const utmParams = useUtmParams();
 
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailSubmitted, setEmailSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  // Generate shareable link
+  const shareableLink = analysisId
+    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/report/${analysisId}`
+    : null;
+
+  const copyToClipboard = async () => {
+    if (!shareableLink) return;
+    try {
+      await navigator.clipboard.writeText(shareableLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +74,7 @@ export default function PricingCTA({
     setError("");
 
     try {
-      // Call email capture API
+      // Call email capture API with UTM params
       const response = await fetch("/api/email-capture", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -63,6 +82,7 @@ export default function PricingCTA({
           email,
           analysisId,
           marketingConsent: true,
+          utmParams,
         }),
       });
 
@@ -185,16 +205,50 @@ export default function PricingCTA({
               </button>
             </form>
           ) : (
-            <div className="space-y-16">
+            <div className="space-y-20">
+              {/* Success message */}
               <div className="flex items-center justify-center gap-8 text-accent-black">
                 <Check className="w-20 h-20" />
                 <span className="text-label-large">Email saved!</span>
               </div>
+
+              {/* Shareable link - unlocked after email */}
+              {shareableLink && (
+                <div className="bg-black-alpha-4 rounded-12 p-16">
+                  <div className="flex items-center gap-8 mb-12">
+                    <Share2 className="w-16 h-16 text-accent-black" />
+                    <span className="text-label-medium text-accent-black">Share your results</span>
+                  </div>
+                  <div className="flex items-center gap-8">
+                    <div className="flex-1 bg-accent-white border border-black-alpha-8 rounded-8 px-12 py-10 text-body-small text-black-alpha-64 truncate">
+                      {shareableLink}
+                    </div>
+                    <button
+                      onClick={copyToClipboard}
+                      className="flex items-center gap-6 px-12 py-10 bg-accent-white border border-black-alpha-8 hover:bg-black-alpha-4 rounded-8 text-label-small transition-colors"
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="w-14 h-14 text-accent-black" />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-14 h-14" />
+                          Copy
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Checkout button */}
               <button
                 onClick={handleCheckout}
                 className="w-full flex items-center justify-center gap-8 px-24 py-14 bg-accent-black hover:bg-black-alpha-80 text-white rounded-8 text-label-large font-medium transition-all"
               >
-                Continue to Checkout
+                Get Full Report
                 <ArrowRight className="w-18 h-18" />
               </button>
             </div>

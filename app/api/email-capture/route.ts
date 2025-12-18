@@ -55,6 +55,8 @@ export async function POST(request: NextRequest) {
         utm_source: utmParams?.utm_source || null,
         utm_medium: utmParams?.utm_medium || null,
         utm_campaign: utmParams?.utm_campaign || null,
+        utm_term: utmParams?.utm_term || null,
+        utm_content: utmParams?.utm_content || null,
         referrer: utmParams?.referrer || null,
       })
       .select('id')
