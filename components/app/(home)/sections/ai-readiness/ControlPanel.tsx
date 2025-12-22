@@ -140,7 +140,19 @@ export default function ControlPanel({
         description: check.details || checks.find(c => c.id === check.id)?.description,
       }));
       setChecks(mappedChecks);
-      setCombinedChecks(mappedChecks); // Initialize with basic checks
+
+      // Only reset combinedChecks if we don't already have AI insights
+      // This prevents wiping out AI cards when onAIAnalysisComplete updates parent state
+      setCombinedChecks(prev => {
+        const hasAICards = prev.some(c => (c as any).isAI);
+        if (hasAICards) {
+          // Keep AI cards, but update basic checks in case scores changed
+          const basicChecks = prev.filter(c => !(c as any).isAI);
+          return [...mappedChecks, ...prev.filter(c => (c as any).isAI)];
+        }
+        return mappedChecks;
+      });
+
       setOverallScore(analysisData.overallScore || 0);
       setCurrentCheckIndex(-1);
       
