@@ -2,6 +2,16 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Starting a Session
+
+Before starting work, read these files to understand current context:
+  1. `docs/ARCHITECTURE.md` - Check which phase is active (look for 🔜 NEXT)
+  2. `docs/logs.md` - Review recent work and any bugs/decisions
+
+After completing significant work:
+  - Add a brief entry to `docs/logs.md` (most recent at top)
+  - Update phase checkboxes in `docs/ARCHITECTURE.md` if completing tasks
+
 ## Commands
 
 ```bash

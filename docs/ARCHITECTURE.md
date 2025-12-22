@@ -255,37 +255,23 @@ URL Input → Firecrawl → Save to DB → Display Results
 ---
 
 ### Phase 6: AI-Enhanced Premium Reports 🔜 NEXT
-**Goal**: Transform the PDF from "summary of free data" to "actionable implementation guide worth $100-150"
 
-**The Problem**:
-Current PDF says things like "Create llms.txt" without explaining:
-- What is llms.txt?
-- Where does it go?
-- What should be in it?
-- Code examples for their specific site
+**Goal**: Transform the PDF from "summary of free data" to "actionable implementation guide worth $50+"
 
-**The Solution**: Use LLM (OpenAI GPT-4) to generate:
-1. **Contextual explanations** - What each issue means for THEIR site
-2. **Step-by-step instructions** - Exactly how to fix each issue
-3. **Code snippets** - Copy-paste ready solutions
-4. **Priority reasoning** - Why this matters for AI discovery
+**Philosophy**: "Give them the fishing rod, not the fish" - teach them how to improve, provide templates and guidance.
 
-**Implementation**:
-- [ ] Create `/api/ai-insights` route to generate LLM-powered recommendations
-- [ ] Design prompt templates for each metric type
-- [ ] Store AI insights in `analyses.ai_insights` JSONB field
-- [ ] Update PDF template with expanded sections per issue
-- [ ] Add "Code Examples" section with syntax highlighting
-- [ ] Consider tiered pricing (Basic $49 vs Premium $149)
+**Detailed Plan**: See `docs/PHASE6_PLAN.md` for full implementation plan including:
+- Research findings on which metrics actually matter for AI
+- PDF structure (~8-10 pages)
+- Content generation strategy (LLM-generated vs static templates)
+- Technical implementation details
+- Honest value proposition
 
-**Example Output Transformation**:
-
-| Current (Free-tier quality) | Enhanced (Premium quality) |
-|----------------------------|---------------------------|
-| "Missing llms.txt file" | "Your site lacks an llms.txt file, which is how AI agents like ChatGPT and Claude understand what your site offers." |
-| "Recommendation: Add llms.txt" | "**Step 1**: Create a file called `llms.txt` in your root directory (`/public/llms.txt` for Next.js).<br>**Step 2**: Add this content:<br>```<code for their domain>```<br>**Step 3**: Deploy and verify at `yourdomain.com/llms.txt`" |
-
-**LLM Provider**: OpenAI GPT-4 (decided) - You have a key, good quality, well-documented API.
+**Key Decisions Made (Dec 22, 2025):**
+- 7 of 8 metrics validated by research; llms.txt is speculative but included
+- Single LLM call per report for personalization
+- Static templates + prompts for "fishing rod" approach
+- Transparent about llms.txt being an "emerging standard"
 
 ---
 
