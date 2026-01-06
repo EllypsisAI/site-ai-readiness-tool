@@ -1,13 +1,13 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Globe, 
-  FileText, 
-  Code, 
-  Shield, 
-  Search, 
-  Zap, 
+import {
+  Globe,
+  FileText,
+  Code,
+  Shield,
+  Search,
+  Zap,
   Database,
   Lock,
   CheckCircle2,
@@ -25,6 +25,8 @@ import { useEffect, useState } from "react";
 import ScoreChart from "./ScoreChart";
 import RadarChart from "./RadarChart";
 import MetricBars from "./MetricBars";
+import { MetricCard } from "@/components/shared/metric-card";
+import { ScoreDisplay } from "@/components/shared/score-display";
 
 interface ControlPanelProps {
   isAnalyzing: boolean;
@@ -442,139 +444,97 @@ export default function ControlPanel({
         )}
       </motion.div>
 
+      {/* Score Display - Brutalist Style */}
+      {showResults && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <ScoreDisplay
+            score={enhancedScore > 0 ? enhancedScore : overallScore}
+            totalChecks={combinedChecks.length}
+            passedChecks={combinedChecks.filter(c => c.status === 'pass').length}
+            warningChecks={combinedChecks.filter(c => c.status === 'warning').length}
+            failedChecks={combinedChecks.filter(c => c.status === 'fail').length}
+            url={url}
+          />
+        </motion.div>
+      )}
+
       {/* Conditional rendering based on view mode */}
       {viewMode === 'grid' && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-12 mb-40 px-40 relative">
-          {combinedChecks.map((check, index) => {
-            const isActive = index === currentCheckIndex;
-            
-            return (
-              <motion.div
-                key={check.id}
-                initial={(check as any).isAI ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.9 }}
-                animate={{ 
-                  opacity: 1, 
-                  scale: isActive ? 1.05 : 1,
-                }}
-                transition={{ 
-                  delay: (check as any).isAI ? 0 : index * 0.1,
-                  scale: { type: "spring", stiffness: 300 }
-                }}
-                className={`
-                  relative p-16 rounded-8 transition-all bg-accent-white border
-                  ${(check as any).isAI ? 'border-heat-100 border-opacity-40 bg-gradient-to-br from-accent-white to-heat-4' : 'border-black-alpha-8'}
-                  ${isActive ? 'border-heat-100 shadow-lg' : ''}
-                  ${check.status !== 'pending' && check.status !== 'checking' ? 'cursor-pointer hover:shadow-md' : ''}
-                  ${(check as any).isLoading ? 'animate-pulse' : ''}
-                `}
-                onClick={() => {
-                  if (check.status !== 'pending' && check.status !== 'checking') {
-                    setSelectedCheck(selectedCheck === check.id ? null : check.id);
-                  }
-                }}
-                onMouseEnter={() => setHoveredCheck(check.id)}
-                onMouseLeave={() => setHoveredCheck(null)}
-              >
-                <div className="relative">
-                  <div className="flex items-start justify-end mb-12">
-                    {getStatusIcon(check.status)}
-                  </div>
-                  
-                  <h3 className="text-label-large mb-4 text-accent-black font-medium flex items-center gap-6">
-                    {check.label}
-                    {check.tooltip && !aiInsights.some(ai => ai.id === check.id) && (
-                      <div className="relative inline-block">
-                        <Info className="w-14 h-14 text-black-alpha-32 hover:text-black-alpha-64 transition-colors" />
-                        <AnimatePresence>
-                          {hoveredCheck === check.id && (
-                            <motion.div
-                              initial={{ opacity: 0, y: 5 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: 5 }}
-                              className="absolute bottom-full left-1/2 -translate-x-1/2 mb-8 w-200 p-8 bg-accent-black text-white text-body-x-small rounded-6 shadow-lg z-50 pointer-events-none"
-                            >
-                              {check.tooltip}
-                              <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-accent-black" />
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    )}
-                  </h3>
-                  
-                  <p className="text-body-small text-black-alpha-64">
-                    {check.description}
-                  </p>
-                  
-                  {check.status !== 'pending' && check.status !== 'checking' && (
-                    <>
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mt-8"
-                      >
-                        <div className="h-2 bg-black-alpha-4 rounded-full overflow-hidden">
-                          <motion.div
-                            className={`
-                              h-full rounded-full
-                              ${check.status === 'pass' ? 'bg-accent-black' : ''}
-                              ${check.status === 'warning' ? 'bg-heat-100' : ''}
-                              ${check.status === 'fail' ? 'bg-heat-200' : ''}
-                            `}
-                            initial={{ width: 0 }}
-                            animate={{ width: `${check.score}%` }}
-                            transition={{ duration: 0.5 }}
-                          />
-                        </div>
-                      </motion.div>
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.5 }}
-                        className="text-label-x-small text-black-alpha-32 mt-4 text-center"
-                      >
-                        Click for details
-                      </motion.div>
-                    </>
-                  )}
-                </div>
-                
-                {/* Expanded Details */}
-                <AnimatePresence>
-                  {selectedCheck === check.id && check.details && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.2 }}
-                      className="mt-12 pt-12 border-t border-black-alpha-8"
-                    >
-                      <div className="space-y-6">
-                        <div>
-                          <div className="text-label-small text-black-alpha-48 mb-2">Status</div>
-                          <div className="text-body-small text-accent-black">{check.details}</div>
-                        </div>
-                        <div>
-                          <div className="text-label-small text-black-alpha-48 mb-2">Recommendation</div>
-                          <div className="text-body-small text-black-alpha-64">{check.recommendation}</div>
-                          {check.actionItems && check.actionItems.length > 0 && (
-                            <ul className="mt-4 space-y-2">
-                              {check.actionItems.map((item: string, i: number) => (
-                                <li key={i} className="flex items-start gap-6 text-body-small text-black-alpha-64">
-                                  <span className="text-heat-100 mt-1">•</span>
-                                  <span>{item}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            );
-          })}
+        <div>
+          {/* Section: Basic Checks */}
+          {combinedChecks.filter(c => !(c as any).isAI).length > 0 && (
+            <div className="mb-8">
+              <h2 className="font-mono text-lg font-bold text-foreground-primary mb-4 uppercase tracking-wide">
+                Basic Checks
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {combinedChecks
+                  .filter(c => !(c as any).isAI)
+                  .map((check) => (
+                    <MetricCard
+                      key={check.id}
+                      id={check.id}
+                      label={check.label}
+                      description={check.description || ''}
+                      icon={check.icon}
+                      status={check.status}
+                      score={check.score}
+                      details={check.details}
+                      recommendation={check.recommendation}
+                      actionItems={check.actionItems}
+                      isAI={false}
+                      onClick={() => {
+                        if (check.status !== 'pending' && check.status !== 'checking') {
+                          setSelectedCheck(selectedCheck === check.id ? null : check.id);
+                        }
+                      }}
+                      isExpanded={selectedCheck === check.id}
+                    />
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {/* Section: AI-Enhanced Checks */}
+          {combinedChecks.filter(c => (c as any).isAI).length > 0 && (
+            <div>
+              <h2 className="font-mono text-lg font-bold text-foreground-primary mb-4 uppercase tracking-wide flex items-center gap-2">
+                AI-Enhanced Checks
+                <span className="text-xs font-normal text-accent-amber bg-accent-amber/10 px-2 py-0.5 rounded">
+                  PREMIUM
+                </span>
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {combinedChecks
+                  .filter(c => (c as any).isAI)
+                  .map((check) => (
+                    <MetricCard
+                      key={check.id}
+                      id={check.id}
+                      label={check.label}
+                      description={check.description || ''}
+                      icon={check.icon}
+                      status={check.status}
+                      score={check.score}
+                      details={check.details}
+                      recommendation={check.recommendation}
+                      actionItems={check.actionItems}
+                      isAI={true}
+                      onClick={() => {
+                        if (check.status !== 'pending' && check.status !== 'checking') {
+                          setSelectedCheck(selectedCheck === check.id ? null : check.id);
+                        }
+                      }}
+                      isExpanded={selectedCheck === check.id}
+                    />
+                  ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
