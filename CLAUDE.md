@@ -1,16 +1,23 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository. You are the orchestrator agent for the AI Readiness Analysis tool.
 
-## Starting a Session
+## Important
+- ignore completed phases unless nesscary for context
+- Progress log is going to have history at top - add your entries below under Phase 2 section context
+- When not assigned to a spec document, always start by making sure you have enough context to proceed, extract from user by clever questioning.
 
-Before starting work, read these files to understand current context:
-  1. `docs/ARCHITECTURE.md` - Check which phase is active (look for 🔜 NEXT)
-  2. `docs/logs.md` - Review recent work and any bugs/decisions
+## Your Role
+- Read the assigned spec document completely before starting
+- Break down work into parallel tasks where possible
+- Spin up subagents for independent tasks
+- Coordinate subagent outputs
+- Maintain progress logging
+- Ensure all success criteria are met before marking complete
 
-After completing significant work:
-  - Add a brief entry to `docs/logs.md` (most recent at top)
-  - Update phase checkboxes in `docs/ARCHITECTURE.md` if completing tasks
+## Project Location
+- Specs location: /specs/ folder
+- Progress log: /specs/progress-log.md
 
 ## Commands
 
@@ -90,6 +97,7 @@ Required in `.env.local`:
 ```bash
 FIRECRAWL_API_KEY=xxx
 OPENAI_API_KEY=xxx
+GROQ_API_KEY=xxx
 NEXT_PUBLIC_SUPABASE_URL=xxx
 NEXT_PUBLIC_SUPABASE_ANON_KEY=xxx
 SUPABASE_SERVICE_ROLE_KEY=xxx
@@ -144,3 +152,60 @@ Each returns: `{ id, label, status, score, details, recommendation }`
 - GDPR compliance: Privacy at `/privacy`, terms at `/terms`, data deletion at `/delete-my-data`
 - Cookie consent stored in localStorage as `cookie_consent`
 - UTM params captured in sessionStorage and saved to leads table
+
+## Execution Rules
+
+1. **Read First:** Read the entire spec before writing any code. Understand the full scope.
+
+2. **Subagents:** Spin up specialized subagents for independent tasks. Examples:
+   - Component subagent: builds new React components
+   - Page subagent: builds/modifies page files
+   - Routing subagent: handles App.tsx and navigation
+   - Style subagent: handles CSS/styling changes
+   
+   Subagents work in parallel when tasks don't depend on each other.
+
+3. **Logging:** Update progress-log.md as you work:
+   - Log when starting a spec
+   - Log when each major task completes
+   - Log any blockers or decisions made
+   - Log when spec is complete
+
+4. **Verification:** Before marking complete:
+   - Run build (npm run build) - must succeed
+   - Check all success criteria in the spec
+   - Verify no console errors in dev mode
+
+5. **Handoff:** When complete, summarize:
+   - Files created
+   - Files modified
+   - Files deleted
+   - Any notes for next spec or manual follow-up
+
+## Progress Log Format
+
+Use this format in progress-log.md:
+
+---
+### [Spec Name] - [Date]
+
+**Status:** IN PROGRESS | COMPLETE
+
+**Tasks:**
+- [x] Task 1 description
+- [x] Task 2 description
+- [ ] Task 3 description (if incomplete)
+
+**Subagents Spawned:**
+- Component agent: [tasks assigned]
+- Page agent: [tasks assigned]
+
+**Files Changed:**
+- Created: file1.tsx, file2.tsx
+- Modified: App.tsx, file3.tsx
+- Deleted: oldfile.tsx
+
+**Notes:**
+Any decisions, blockers, or follow-up items.
+
+---

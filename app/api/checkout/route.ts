@@ -4,7 +4,7 @@ import { createServiceClient } from '@/lib/supabase/server';
 
 // Initialize Stripe with secret key
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-04-30.basil',
+  apiVersion: '2025-12-15.clover',
 });
 
 export async function POST(request: NextRequest) {
