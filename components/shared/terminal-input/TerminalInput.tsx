@@ -38,6 +38,21 @@ export function TerminalInput({
 
   return (
     <div className="w-full max-w-3xl mx-auto">
+      {/* Clear Call-to-Action Label */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="mb-4 text-center"
+      >
+        <h2 className="text-lg lg:text-xl font-sans font-semibold text-foreground-primary mb-1">
+          Get Your Free AI Readiness Score
+        </h2>
+        <p className="text-sm text-foreground-secondary">
+          Enter your website URL below to start the analysis
+        </p>
+      </motion.div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -70,15 +85,20 @@ export function TerminalInput({
           {/* Terminal Content */}
           <div className="p-6 font-mono text-sm">
             <form onSubmit={handleSubmit} className="space-y-3">
-              {/* Command Prompt */}
-              <div className="flex items-center gap-2 text-foreground-secondary">
-                <span className="text-accent-amber font-semibold">$</span>
-                <span>aicanseeme analyze --url</span>
+              {/* Clear instruction */}
+              <div className="mb-4 text-foreground-primary font-sans text-sm">
+                <span className="text-accent-amber font-semibold">→</span> Enter your website URL to get your AI readiness score
               </div>
 
-              {/* Input Line */}
-              <div className="flex items-center gap-2">
-                <span className="text-foreground-tertiary">&gt;</span>
+              {/* Command Prompt */}
+              <div className="flex items-center gap-2 text-foreground-secondary text-xs mb-1">
+                <span className="text-accent-amber font-semibold">$</span>
+                <span>aicanseeme analyze</span>
+              </div>
+
+              {/* Input Line - BIGGER & MORE OBVIOUS */}
+              <div className="flex items-center gap-3 bg-background-secondary/50 rounded px-4 py-3 border border-border-default hover:border-accent-amber/50 transition-colors">
+                <span className="text-accent-amber text-lg font-bold">&gt;</span>
                 <div className="flex-1 flex items-center">
                   <input
                     ref={inputRef}
@@ -91,7 +111,7 @@ export function TerminalInput({
                     disabled={isLoading}
                     className={`
                       flex-1 bg-transparent outline-none
-                      text-foreground-primary placeholder:text-foreground-tertiary
+                      text-foreground-primary text-lg placeholder:text-foreground-tertiary/60
                       font-mono
                       disabled:opacity-50 disabled:cursor-not-allowed
                     `}
@@ -99,7 +119,7 @@ export function TerminalInput({
                     spellCheck="false"
                   />
                   {!isLoading && isFocused && (
-                    <span className="cursor-blink text-accent-amber ml-0.5 inline-block w-2">
+                    <span className="cursor-blink text-accent-amber ml-1 inline-block w-2.5 text-lg">
                       ▊
                     </span>
                   )}
@@ -109,15 +129,32 @@ export function TerminalInput({
                     </span>
                   )}
                 </div>
+
+                {/* Visual CTA inside input */}
+                {!isLoading && !url && (
+                  <div className="flex items-center gap-2 text-xs text-foreground-tertiary bg-background-tertiary px-3 py-1.5 rounded">
+                    <kbd className="px-1.5 py-0.5 bg-background-primary border border-border-subtle rounded text-[10px] font-mono">
+                      Enter
+                    </kbd>
+                    <span>to analyze</span>
+                  </div>
+                )}
               </div>
 
-              {/* Submit Hint */}
-              {!isLoading && (
-                <div className="flex items-center gap-2 text-xs text-foreground-tertiary">
-                  <kbd className="px-1.5 py-0.5 bg-background-tertiary border border-border-subtle rounded text-[10px]">
-                    Enter
-                  </kbd>
-                  <span>to run analysis</span>
+              {/* Example link */}
+              {!isLoading && !url && (
+                <div className="mt-3 text-xs text-foreground-tertiary">
+                  Example: <button
+                    type="button"
+                    onClick={() => {
+                      const exampleUrl = 'https://example.com';
+                      setUrl(exampleUrl);
+                      inputRef.current?.focus();
+                    }}
+                    className="text-accent-amber hover:text-accent-gold underline cursor-pointer"
+                  >
+                    example.com
+                  </button>
                 </div>
               )}
 
@@ -169,15 +206,22 @@ export function TerminalInput({
         )}
       </motion.div>
 
-      {/* Help Text */}
-      <motion.p
+      {/* Help Text - CLEARER VALUE PROP */}
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}
-        className="mt-4 text-center text-sm text-foreground-tertiary font-mono"
+        className="mt-6 text-center space-y-2"
       >
-        FREE • 16 checks • ~30 seconds
-      </motion.p>
+        <p className="text-sm font-sans text-foreground-secondary">
+          <span className="text-accent-success font-semibold">✓ FREE</span> •
+          <span className="text-foreground-primary font-semibold"> 16 AI readiness checks</span> •
+          Results in ~30 seconds
+        </p>
+        <p className="text-xs text-foreground-tertiary">
+          No signup required • Get your score instantly
+        </p>
+      </motion.div>
     </div>
   );
 }
