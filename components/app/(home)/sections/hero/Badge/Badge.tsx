@@ -1,43 +1,22 @@
-import Link from "next/link";
+'use client';
+
+import { motion } from 'framer-motion';
 
 export default function HomeHeroBadge() {
   return (
-    <Link
-      className="p-4 rounded-full flex w-max mx-auto mb-12 lg:mb-16 items-center relative before:inside-border before:border-border-faint group"
-      href="#"
-      onClick={(e) => e.preventDefault()}
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+      className="flex items-center justify-center gap-2 mb-8 lg:mb-12"
     >
-      <div className="px-8 text-label-x-small">AI Ready Check</div>
-
-      <div className="p-1">
-        <div className="size-18 bg-accent-black flex-center rounded-full group-hover:bg-heat-100 transition-all group-hover:w-30">
-          <svg
-            fill="none"
-            height="8"
-            viewBox="0 0 10 8"
-            width="10"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              className="transition-all -translate-x-2 group-hover:translate-x-0"
-              d="M6 1L9 4L6 7"
-              stroke="white"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="1.25"
-            />
-
-            <path
-              className="transition-all -translate-x-3 group-hover:translate-x-0 scale-x-[0] group-hover:scale-x-[1] origin-right"
-              d="M1 4L9 4"
-              stroke="white"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="1.25"
-            />
-          </svg>
-        </div>
-      </div>
-    </Link>
+      <span className="text-xs lg:text-sm font-mono text-foreground-tertiary uppercase tracking-wider">
+        AiCanSee.me
+      </span>
+      <div className="w-1 h-1 rounded-full bg-accent-amber"></div>
+      <span className="text-xs lg:text-sm font-mono text-accent-amber">
+        AI Readiness Analyzer
+      </span>
+    </motion.div>
   );
 }
