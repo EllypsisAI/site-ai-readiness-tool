@@ -633,42 +633,36 @@ Overall AI Visibility Score: 78/100
 
 ---
 
-### Scrolly Persuasion Journey (Conversion Funnel)
+### Interactive Diagnostic Report (Conversion Funnel)
 
-**Current**: 6 passive scroll sections with fade-ins
+**OLD APPROACH**: 6 passive scroll sections with fade-ins (discarded)
 
-**New Design**: Interactive CLI-style journey with 5 sections
+**NEW APPROACH** (Implemented): Interactive accordion-style diagnostic report
 
-#### Section 1: Reality Check (FOMO)
+**Rationale**: Passive scrolling doesn't fit the CLI/diagnostic tool aesthetic. Users want to engage with data, not passively scroll. The new approach treats the conversion funnel as an interactive technical report with collapsible sections - more like reading terminal output than watching a presentation.
 
-```
-┌────────────────────────────────────────────────────────────┐
-│                                                            │
-│  Here's what you need to know.                            │
-│  ─────────────────────────────                             │
-│                                                            │
-│  In 2026, AI agents are how people find websites.         │
-│  ChatGPT, Perplexity, Claude—they're all crawling the     │
-│  web right now, deciding which sites to recommend.        │
-│                                                            │
-│  Your site scored 78/100.                                 │
-│  That means you're LOSING traffic to competitors who      │
-│  scored higher.                                            │
-│                                                            │
-│  ┌──────────────────────────────────────────────────────┐ │
-│  │ "Sites scoring 85+ get recommended 3x more often     │ │
-│  │  by AI agents."                                       │ │
-│  │                         — Internal analysis, 2025    │ │
-│  └──────────────────────────────────────────────────────┘ │
-│                                                            │
-└────────────────────────────────────────────────────────────┘
-```
+**Key Changes**:
+- Replaced ScrollyJourney component with DiagnosticReport component
+- Changed from scroll-triggered animations to click-to-expand sections
+- Each section is an accordion that user controls
+- More data-dense, less fluffy marketing copy
+- Brutalist card-based layout instead of full-height scroll sections
+- Removed progress dots on side
+- Added FOMO messaging throughout (not just one section)
 
-**Tone**: Urgent, fact-driven, FOMO
+**Structure** (3 collapsible sections + waitlist teaser):
+
+#### Header: Diagnostic Summary (Always Visible)
+
+Displays:
+- Domain analyzed
+- Overall score (with color-coded status: Good/Fair/Poor)
+- Number of critical issues/warnings
+- FOMO callout box: "AI agents are indexing your competitors right now. Sites scoring 85+ get recommended 3x more often."
 
 ---
 
-#### Section 2: Your Biggest Issues
+#### Section 1: What's Holding You Back (Collapsible)
 
 ```
 ┌────────────────────────────────────────────────────────────┐

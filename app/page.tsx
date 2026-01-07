@@ -12,7 +12,7 @@ import { TerminalInput } from "@/components/shared/terminal-input";
 import HomeHero from "@/components/app/(home)/sections/hero/Hero";
 import { Endpoint } from "@/components/shared/Playground/Context/types";
 import ControlPanel from "@/components/app/(home)/sections/ai-readiness/ControlPanel";
-import ScrollyJourney from "@/components/app/(home)/sections/scrolly/ScrollyJourney";
+import { DiagnosticReport } from "@/components/app/(home)/sections/diagnostic-report";
 
 // Import header components
 import HeaderBrandKit from "@/components/shared/header/BrandKit/BrandKit";
@@ -247,16 +247,15 @@ export default function StyleGuidePage() {
             )}
           </AnimatePresence>
 
-        {/* Scrolly Journey - Show after results */}
+        {/* Diagnostic Report - Show after results */}
         {showResults && analysisData && (
-          <ScrollyJourney
+          <DiagnosticReport
             analysisData={{
               id: analysisData.analysisId,
               url: analysisData.url,
               overallScore: analysisData.enhancedScore || analysisData.overallScore,
               checks: analysisData.checks,
               metadata: analysisData.metadata,
-              // AI insights data for enhanced journey
               aiInsights: analysisData.aiInsights,
               overallAIReadiness: analysisData.overallAIReadiness,
               topPriorities: analysisData.topPriorities,
